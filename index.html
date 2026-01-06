@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>WONDERLAND OS</title>
     
     <!-- Google Fonts -->
@@ -66,6 +66,8 @@
                 radial-gradient(#60A5FA 1px, transparent 1px);
             background-position: 0 0, 20px 20px;
             background-size: 40px 40px;
+            /* Prevent pull-to-refresh on mobile */
+            overscroll-behavior: none;
         }
 
         /* Live Wallpaper Blobs */
@@ -168,6 +170,7 @@
         /* Custom Scrollbar inside windows */
         .window-content {
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
         }
         .window-content::-webkit-scrollbar {
             width: 8px;
@@ -205,7 +208,7 @@
         }
     </style>
 </head>
-<body class="h-screen w-screen relative overflow-hidden text-slate-700">
+<body class="h-[100dvh] w-full relative overflow-hidden text-slate-700">
 
     <!-- BGM Audio Element -->
     <!-- 注意: MurekaのURLはWebページのため直接srcには指定できません。
