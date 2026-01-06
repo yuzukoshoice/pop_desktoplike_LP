@@ -16,7 +16,7 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- jQuery & jQuery UI (for Draggable) -->
+    <!-- jQuery & jQuery UI -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
@@ -59,18 +59,16 @@
         body {
             font-family: 'Zen Kaku Gothic New', sans-serif;
             background-color: #E0F2FE;
-            overflow: hidden; /* Prevent body scroll */
+            overflow: hidden;
             user-select: none;
             background-image: 
                 radial-gradient(#60A5FA 1px, transparent 1px),
                 radial-gradient(#60A5FA 1px, transparent 1px);
             background-position: 0 0, 20px 20px;
             background-size: 40px 40px;
-            /* Prevent pull-to-refresh on mobile */
             overscroll-behavior: none;
         }
 
-        /* Live Wallpaper Blobs */
         .shape-blob {
             position: absolute;
             border-radius: 50%;
@@ -81,7 +79,6 @@
             animation: float 10s ease-in-out infinite;
         }
 
-        /* Pop Bubbles */
         .bubble {
             position: absolute;
             border-radius: 50%;
@@ -112,13 +109,11 @@
             text-shadow: 2px 2px 0px white, 4px 4px 0px rgba(96, 165, 250, 0.2);
         }
 
-        /* Desktop Icon Hover Effect */
         .desktop-icon:hover .icon-img {
             transform: scale(1.1);
             filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.6));
         }
 
-        /* Window Styling */
         .os-window {
             position: absolute;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
@@ -133,8 +128,8 @@
             opacity: 0;
             transform: scale(0.95);
             transition: opacity 0.2s, transform 0.2s, width 0.3s, height 0.3s, top 0.3s, left 0.3s;
-            pointer-events: none; /* Initially hidden */
-            z-index: 20; /* Ensure windows are above desktop icons */
+            pointer-events: none;
+            z-index: 20;
         }
 
         .os-window.is-open {
@@ -153,11 +148,10 @@
             top: 0 !important;
             left: 0 !important;
             width: 100% !important;
-            height: calc(100% - 64px) !important; /* Minus taskbar height */
+            height: calc(100% - 64px) !important;
             border-radius: 0;
         }
 
-        /* Title Bar */
         .title-bar {
             cursor: grab;
             background: linear-gradient(to right, #eff6ff, #ffffff);
@@ -167,10 +161,9 @@
             cursor: grabbing;
         }
 
-        /* Custom Scrollbar inside windows */
         .window-content {
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            -webkit-overflow-scrolling: touch;
         }
         .window-content::-webkit-scrollbar {
             width: 8px;
@@ -186,7 +179,6 @@
             background: #94a3b8;
         }
 
-        /* Start Menu */
         #start-menu {
             transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.2s;
             transform-origin: bottom left;
@@ -197,7 +189,6 @@
             pointer-events: none;
         }
 
-        /* Scanlines Effect for Retro Feel */
         .scanlines {
             background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.02) 50%, rgba(0,0,0,0.02));
             background-size: 100% 4px;
@@ -210,26 +201,17 @@
 </head>
 <body class="h-[100dvh] w-full relative overflow-hidden text-slate-700">
 
-    <!-- BGM Audio Element -->
-    <!-- 注意: MurekaのURLはWebページのため直接srcには指定できません。
-         ここでは雰囲気が近いフリー素材(Happy Pop系)をプレースホルダーとして設定しています。
-         実際のファイルをお持ちの場合は、src="..."の部分をファイルパスに書き換えてください。 -->
     <audio id="site-bgm" loop>
         <source src="https://cdn.pixabay.com/download/audio/2022/10/18/audio_31c2730e64.mp3?filename=sweet-monkeys-124339.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
 
-    <!-- Live Wallpaper Layer -->
     <div id="wallpaper-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
-        <!-- Animated Blobs (Large) -->
         <div class="shape-blob bg-blue-300 w-96 h-96 top-[-10%] left-[-10%] animate-float"></div>
         <div class="shape-blob bg-pink-300 w-80 h-80 bottom-[-10%] right-[-10%] animate-float" style="animation-delay: -2s; animation-duration: 8s;"></div>
         <div class="shape-blob bg-yellow-200 w-64 h-64 top-[40%] right-[10%] animate-float" style="animation-delay: -4s; animation-duration: 12s;"></div>
         <div class="shape-blob bg-purple-200 w-[500px] h-[500px] top-[20%] left-[20%] animate-float" style="animation-delay: -1s; animation-duration: 15s; opacity: 0.3;"></div>
         
-        <!-- Bubbles will be injected here by JS -->
-
-        <!-- Center Wallpaper Info (Logo & Text) -->
         <div class="absolute top-[65%] md:top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full z-10 transition-all duration-500">
             <h1 class="font-pop text-5xl md:text-9xl text-brand-blue wallpaper-logo tracking-tighter mb-4 opacity-90 transition-all">
                 WONDERLAND
@@ -244,10 +226,8 @@
         </div>
     </div>
 
-    <!-- Desktop Icons Container -->
     <div id="desktop-icons" class="absolute top-0 left-0 w-full h-full p-6 grid grid-cols-3 md:grid-flow-col md:grid-rows-6 gap-4 md:gap-6 justify-center md:justify-start content-start md:content-start z-10 pt-12 md:pt-6">
         
-        <!-- Icon: PC -->
         <div class="desktop-icon flex flex-col items-center w-full md:w-24 gap-1 cursor-pointer group" onclick="openWindow('about')">
             <div class="icon-img w-12 h-12 md:w-14 md:h-14 bg-white rounded-xl shadow-lg flex items-center justify-center text-2xl md:text-3xl text-brand-blue transition-transform duration-300">
                 <i class="fa-solid fa-computer"></i>
@@ -255,7 +235,6 @@
             <span class="text-[10px] md:text-xs font-bold text-slate-600 bg-white/60 px-2 py-0.5 rounded backdrop-blur-sm group-hover:text-brand-blue truncate max-w-full text-center">My PC</span>
         </div>
 
-        <!-- Icon: News -->
         <div class="desktop-icon flex flex-col items-center w-full md:w-24 gap-1 cursor-pointer group" onclick="openWindow('news')">
             <div class="icon-img w-12 h-12 md:w-14 md:h-14 bg-blue-100 rounded-xl shadow-lg flex items-center justify-center text-2xl md:text-3xl text-blue-500 transition-transform duration-300">
                 <i class="fa-regular fa-newspaper"></i>
@@ -263,7 +242,6 @@
             <span class="text-[10px] md:text-xs font-bold text-slate-600 bg-white/60 px-2 py-0.5 rounded backdrop-blur-sm group-hover:text-brand-blue truncate max-w-full text-center">NEWS.txt</span>
         </div>
 
-        <!-- Icon: Movie -->
         <div class="desktop-icon flex flex-col items-center w-full md:w-24 gap-1 cursor-pointer group" onclick="openWindow('movie')">
             <div class="icon-img w-12 h-12 md:w-14 md:h-14 bg-red-100 rounded-xl shadow-lg flex items-center justify-center text-2xl md:text-3xl text-red-500 transition-transform duration-300">
                 <i class="fa-brands fa-youtube"></i>
@@ -271,7 +249,6 @@
             <span class="text-[10px] md:text-xs font-bold text-slate-600 bg-white/60 px-2 py-0.5 rounded backdrop-blur-sm group-hover:text-brand-blue truncate max-w-full text-center">MOVIE.mp4</span>
         </div>
 
-        <!-- Icon: Goods -->
         <div class="desktop-icon flex flex-col items-center w-full md:w-24 gap-1 cursor-pointer group" onclick="openWindow('goods')">
             <div class="icon-img w-12 h-12 md:w-14 md:h-14 bg-yellow-100 rounded-xl shadow-lg flex items-center justify-center text-2xl md:text-3xl text-yellow-500 transition-transform duration-300">
                 <i class="fa-solid fa-bag-shopping"></i>
@@ -279,7 +256,6 @@
             <span class="text-[10px] md:text-xs font-bold text-slate-600 bg-white/60 px-2 py-0.5 rounded backdrop-blur-sm group-hover:text-brand-blue truncate max-w-full text-center">GOODS</span>
         </div>
 
-        <!-- Icon: Trash -->
         <div class="desktop-icon flex flex-col items-center w-full md:w-24 gap-1 cursor-pointer group md:mt-auto">
             <div class="icon-img w-12 h-12 md:w-14 md:h-14 bg-slate-200 rounded-xl shadow-lg flex items-center justify-center text-2xl md:text-3xl text-slate-500 transition-transform duration-300">
                 <i class="fa-solid fa-trash-can"></i>
@@ -288,10 +264,8 @@
         </div>
     </div>
 
-    <!-- Windows Area -->
     <div id="windows-container" class="absolute inset-0 pointer-events-none pb-16 z-20">
         
-        <!-- Window: ABOUT -->
         <div id="win-about" class="os-window w-[90%] md:w-[800px] h-[70%] md:h-[600px]" style="top: 10%; left: 5%;">
             <div class="title-bar h-10 flex items-center justify-between px-3 select-none">
                 <div class="flex items-center gap-2">
@@ -304,7 +278,6 @@
                     <button class="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500" onclick="closeWindow('win-about')"></button>
                 </div>
             </div>
-            <!-- Fake Browser UI -->
             <div class="bg-slate-50 border-b border-slate-200 p-2 flex items-center gap-2">
                 <div class="flex gap-2 text-slate-400 text-sm">
                     <i class="fa-solid fa-arrow-left hover:text-slate-600 cursor-pointer"></i>
@@ -342,7 +315,6 @@
             </div>
         </div>
 
-        <!-- Window: NEWS -->
         <div id="win-news" class="os-window w-[90%] md:w-[600px] h-[60%] md:h-[500px]" style="top: 15%; left: 5%;">
             <div class="title-bar h-10 flex items-center justify-between px-3 select-none">
                 <div class="flex items-center gap-2">
@@ -356,7 +328,6 @@
                 </div>
             </div>
             <div class="window-content flex-grow bg-white p-0 overflow-y-auto font-mono text-sm leading-relaxed">
-                <!-- Notepad Menu -->
                 <div class="flex gap-4 px-2 py-1 border-b border-slate-100 text-xs text-slate-600">
                     <span class="hover:bg-slate-100 px-2 cursor-pointer">File</span>
                     <span class="hover:bg-slate-100 px-2 cursor-pointer">Edit</span>
@@ -390,7 +361,6 @@
             </div>
         </div>
 
-        <!-- Window: MOVIE -->
         <div id="win-movie" class="os-window w-[90%] md:w-[700px] h-[60%] md:h-[500px]" style="top: 12%; left: 5%;">
             <div class="title-bar h-10 flex items-center justify-between px-3 select-none">
                 <div class="flex items-center gap-2">
@@ -409,7 +379,6 @@
                      <div class="absolute inset-0 flex items-center justify-center">
                         <i class="fa-solid fa-play-circle text-6xl text-white opacity-80 hover:opacity-100 hover:scale-110 transition-all cursor-pointer shadow-xl"></i>
                      </div>
-                     <!-- Fake Player UI -->
                      <div class="absolute bottom-0 left-0 w-full h-10 bg-black/60 backdrop-blur flex items-center px-4 gap-4 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity">
                         <i class="fa-solid fa-play"></i>
                         <div class="flex-grow h-1 bg-white/30 rounded-full relative">
@@ -427,7 +396,6 @@
             </div>
         </div>
 
-        <!-- Window: GOODS -->
         <div id="win-goods" class="os-window w-[90%] md:w-[750px] h-[70%] md:h-[550px]" style="top: 10%; left: 5%;">
             <div class="title-bar h-10 flex items-center justify-between px-3 select-none">
                 <div class="flex items-center gap-2">
@@ -440,7 +408,6 @@
                     <button class="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500" onclick="closeWindow('win-goods')"></button>
                 </div>
             </div>
-            <!-- Fake Browser UI -->
             <div class="bg-slate-50 border-b border-slate-200 p-2 flex items-center gap-2">
                 <div class="flex gap-2 text-slate-400 text-sm">
                     <i class="fa-solid fa-arrow-left hover:text-slate-600 cursor-pointer"></i>
@@ -455,7 +422,6 @@
             <div class="window-content flex-grow bg-white p-6 overflow-y-auto">
                 <h2 class="font-pop text-2xl text-brand-blue mb-6 border-b pb-2">RECOMMENDED ITEMS</h2>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <!-- Item -->
                     <div class="border rounded-lg p-2 hover:shadow-lg transition-shadow cursor-pointer">
                         <div class="aspect-square bg-slate-100 rounded mb-2 overflow-hidden">
                              <img src="https://placehold.co/400x400/FFF/60A5FA?text=Stand" class="w-full h-full object-cover">
@@ -464,7 +430,6 @@
                         <p class="text-brand-blue font-bold text-sm">¥1,500</p>
                         <button class="w-full bg-brand-blue text-white text-xs py-1 rounded mt-2 hover:bg-blue-400">ADD TO CART</button>
                     </div>
-                    <!-- Item -->
                     <div class="border rounded-lg p-2 hover:shadow-lg transition-shadow cursor-pointer">
                         <div class="aspect-square bg-slate-100 rounded mb-2 overflow-hidden">
                              <img src="https://placehold.co/400x400/FFF/60A5FA?text=T-Shirt" class="w-full h-full object-cover">
@@ -473,7 +438,6 @@
                         <p class="text-brand-blue font-bold text-sm">¥3,500</p>
                         <button class="w-full bg-brand-blue text-white text-xs py-1 rounded mt-2 hover:bg-blue-400">ADD TO CART</button>
                     </div>
-                    <!-- Item -->
                     <div class="border rounded-lg p-2 hover:shadow-lg transition-shadow cursor-pointer">
                         <div class="aspect-square bg-slate-100 rounded mb-2 overflow-hidden">
                              <img src="https://placehold.co/400x400/FFF/60A5FA?text=Sticker" class="w-full h-full object-cover">
@@ -488,7 +452,6 @@
 
     </div>
 
-    <!-- Start Menu -->
     <div id="start-menu" class="hidden-menu absolute bottom-16 left-4 w-72 bg-white/90 backdrop-blur-md rounded-xl shadow-2xl border border-white z-50 overflow-hidden flex flex-col">
         <div class="bg-brand-blue p-4 flex items-center gap-3">
             <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-brand-blue text-xl">
@@ -519,37 +482,30 @@
         </div>
     </div>
 
-    <!-- Taskbar -->
     <div id="taskbar" class="absolute bottom-0 w-full h-14 bg-os-taskbar backdrop-blur-md shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 flex justify-between items-center px-4">
         
-        <!-- Start Button -->
         <div class="flex items-center gap-4">
             <button id="start-btn" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/50 transition-colors group relative" onclick="toggleStartMenu()">
                 <i class="fa-solid fa-rainbow text-2xl text-brand-blue group-hover:scale-110 transition-transform"></i>
                 <span class="absolute -top-10 left-0 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Start</span>
             </button>
 
-            <!-- Search Bar (Decorative) -->
             <div class="hidden md:flex items-center bg-white/50 rounded-full px-4 py-1.5 w-64 border border-white/50">
                 <i class="fa-solid fa-search text-slate-400 text-sm mr-2"></i>
                 <input type="text" placeholder="Type here to search..." class="bg-transparent border-none outline-none text-sm text-slate-600 w-full font-body">
             </div>
         </div>
 
-        <!-- System Tray -->
         <div class="flex items-center gap-4">
-            <!-- Audio Toggle -->
             <button id="audio-btn" class="flex flex-col items-center justify-center w-10 h-full hover:bg-white/50 px-2 rounded transition-colors group" onclick="toggleAudio()">
                 <i id="audio-icon" class="fa-solid fa-volume-xmark text-slate-400 text-lg"></i>
             </button>
 
-            <!-- Clock -->
             <div class="flex flex-col items-end justify-center px-2 hover:bg-white/50 rounded cursor-default h-full">
                 <div id="clock-time" class="text-sm font-bold text-slate-700 leading-tight">12:00</div>
                 <div id="clock-date" class="text-xs text-slate-500 leading-tight">2026/01/01</div>
             </div>
 
-            <!-- Notifications (Decorative) -->
             <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/50 relative">
                 <i class="fa-regular fa-bell text-slate-600"></i>
                 <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full animate-pulse"></span>
@@ -557,45 +513,33 @@
         </div>
     </div>
 
-    <!-- Scanlines overlay -->
     <div class="scanlines"></div>
 
     <script>
-        // Make windows draggable using jQuery UI
         $(function() {
             $(".os-window").draggable({
                 handle: ".title-bar",
                 containment: "body",
-                stack: ".os-window" // Brings clicked window to front automatically
+                stack: ".os-window"
             });
         });
 
-        // Window Management
         function openWindow(id) {
             const win = document.getElementById('win-' + id);
             if (win) {
-                // Reset minimized state if needed
                 win.classList.remove('is-minimized');
-                
-                // Add open class
                 win.classList.add('is-open');
-                
-                // Bring to front (manual fallback for non-jquery clicks)
                 bringToFront(win);
-
-                // Close start menu
                 document.getElementById('start-menu').classList.add('hidden-menu');
             }
         }
 
         function closeWindow(id) {
-            const win = document.getElementById(id); // ID passed usually includes 'win-' prefix if called from self
-            // Fix: if called with just suffix
+            const win = document.getElementById(id);
             const targetId = id.startsWith('win-') ? id : 'win-' + id;
             const target = document.getElementById(targetId);
             if(target) {
                 target.classList.remove('is-open');
-                // Reset maximize state when closed
                 setTimeout(() => {
                     target.classList.remove('is-maximized');
                 }, 200);
@@ -624,27 +568,23 @@
             element.style.zIndex = maxZ + 1;
         }
 
-        // Add event listeners to windows to bring to front on mousedown
         document.querySelectorAll('.os-window').forEach(win => {
             win.addEventListener('mousedown', () => {
                 bringToFront(win);
             });
         });
 
-        // Start Menu Toggle
         function toggleStartMenu() {
             const menu = document.getElementById('start-menu');
             menu.classList.toggle('hidden-menu');
         }
 
-        // Close start menu when clicking on desktop
         document.getElementById('desktop-icons').addEventListener('click', (e) => {
             if (e.target.id === 'desktop-icons') {
                 document.getElementById('start-menu').classList.add('hidden-menu');
             }
         });
 
-        // Clock Logic
         function updateClock() {
             const now = new Date();
             const timeString = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
@@ -656,8 +596,7 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Audio Toggle Logic
-        let isAudioOn = false; // Start muted
+        let isAudioOn = false;
         const audio = document.getElementById('site-bgm');
 
         function toggleAudio() {
@@ -666,10 +605,9 @@
             
             if (isAudioOn) {
                 icon.className = 'fa-solid fa-volume-high text-slate-600 text-lg';
-                audio.volume = 0.5; // Set reasonable volume
+                audio.volume = 0.5;
                 audio.play().catch(e => {
                     console.log("Audio play failed:", e);
-                    // Reset UI if play failed (e.g. user interaction policy blocked it)
                     isAudioOn = false;
                     icon.className = 'fa-solid fa-volume-xmark text-slate-400 text-lg';
                     alert("音楽を再生するには、ページ上のどこかをクリックしてからもう一度お試しください。");
@@ -680,10 +618,9 @@
             }
         }
 
-        // Bubble Generation Logic
         function createBubbles() {
             const container = document.getElementById('wallpaper-container');
-            const bubbleCount = 15; // Number of active bubbles
+            const bubbleCount = 15;
 
             for (let i = 0; i < bubbleCount; i++) {
                 setTimeout(() => spawnBubble(container), i * 800);
@@ -694,10 +631,9 @@
             const bubble = document.createElement('div');
             bubble.classList.add('bubble');
             
-            // Randomize size, position, and color
-            const size = Math.random() * 60 + 20; // 20px - 80px
-            const left = Math.random() * 100; // 0% - 100%
-            const duration = Math.random() * 10 + 5; // 5s - 15s
+            const size = Math.random() * 60 + 20;
+            const left = Math.random() * 100;
+            const duration = Math.random() * 10 + 5;
             const delay = Math.random() * 5;
             const colors = ['#60A5FA', '#F472B6', '#FBBF24', '#A78BFA'];
             const color = colors[Math.floor(Math.random() * colors.length)];
@@ -708,28 +644,18 @@
             bubble.style.backgroundColor = color;
             bubble.style.opacity = Math.random() * 0.4 + 0.1;
             bubble.style.animationDuration = `${duration}s`;
-            // CSS variable for horizontal sway
             bubble.style.setProperty('--w-offset', `${Math.random() * 100 - 50}px`);
 
-            // Remove bubble after animation ends and spawn a new one
             bubble.addEventListener('animationiteration', () => {
-                // Reset properties for next loop if needed, but simple removal is easier for variability
             });
             
-            // Simpler: Just endless loop with CSS, but for variety lets replace
             container.appendChild(bubble);
-            
-            // Cleanup and respawn logic handled by CSS animation loop mostly, 
-            // but for dynamic respawn let's just let them loop infinitely with CSS
-            // The current CSS sets them to infinite.
         }
 
-        // Initialize: Open About window by default after a delay for effect
         setTimeout(() => {
             openWindow('about');
         }, 800);
         
-        // Start bubbles
         createBubbles();
 
     </script>
