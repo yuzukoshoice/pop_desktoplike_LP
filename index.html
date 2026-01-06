@@ -201,10 +201,6 @@
 </head>
 <body class="h-[100dvh] w-full relative overflow-hidden text-slate-700">
 
-    <audio id="site-bgm" loop>
-        <source src="./bgm.mp3" type="audio/mpeg">
-    </audio>
-
     <div id="wallpaper-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
         <div class="shape-blob bg-blue-300 w-96 h-96 top-[-10%] left-[-10%] animate-float"></div>
         <div class="shape-blob bg-pink-300 w-80 h-80 bottom-[-10%] right-[-10%] animate-float" style="animation-delay: -2s; animation-duration: 8s;"></div>
@@ -271,11 +267,9 @@
                     <i class="fa-solid fa-computer text-brand-blue"></i>
                     <span class="text-xs font-bold text-slate-500">My PC - System Info</span>
                 </div>
-                <div class="flex gap-2">
-                    <button class="w-3 h-3 rounded-full bg-green-400 hover:bg-green-500" onclick="maximizeWindow('win-about')"></button>
-                    <button class="w-3 h-3 rounded-full bg-yellow-400 hover:bg-yellow-500" onclick="minimizeWindow('win-about')"></button>
-                    <button class="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500" onclick="closeWindow('win-about')"></button>
-                </div>
+                <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 flex items-center justify-center transition-all" onclick="closeWindow('win-about')">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
             </div>
             <div class="bg-slate-50 border-b border-slate-200 p-2 flex items-center gap-2">
                 <div class="flex gap-2 text-slate-400 text-sm">
@@ -320,11 +314,9 @@
                     <i class="fa-regular fa-newspaper text-blue-500"></i>
                     <span class="text-xs font-bold text-slate-500">NEWS.txt - Notepad</span>
                 </div>
-                <div class="flex gap-2">
-                    <button class="w-3 h-3 rounded-full bg-green-400 hover:bg-green-500" onclick="maximizeWindow('win-news')"></button>
-                    <button class="w-3 h-3 rounded-full bg-yellow-400 hover:bg-yellow-500" onclick="minimizeWindow('win-news')"></button>
-                    <button class="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500" onclick="closeWindow('win-news')"></button>
-                </div>
+                <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 flex items-center justify-center transition-all" onclick="closeWindow('win-news')">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
             </div>
             <div class="window-content flex-grow bg-white p-0 overflow-y-auto font-mono text-sm leading-relaxed">
                 <div class="flex gap-4 px-2 py-1 border-b border-slate-100 text-xs text-slate-600">
@@ -366,11 +358,9 @@
                     <i class="fa-brands fa-youtube text-red-500"></i>
                     <span class="text-xs font-bold text-slate-500">Media Player</span>
                 </div>
-                <div class="flex gap-2">
-                    <button class="w-3 h-3 rounded-full bg-green-400 hover:bg-green-500" onclick="maximizeWindow('win-movie')"></button>
-                    <button class="w-3 h-3 rounded-full bg-yellow-400 hover:bg-yellow-500" onclick="minimizeWindow('win-movie')"></button>
-                    <button class="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500" onclick="closeWindow('win-movie')"></button>
-                </div>
+                <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 flex items-center justify-center transition-all" onclick="closeWindow('win-movie')">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
             </div>
             <div class="window-content flex-grow bg-black flex flex-col items-center justify-center p-4">
                 <div class="w-full aspect-video bg-slate-800 rounded mb-4 relative overflow-hidden group">
@@ -401,11 +391,9 @@
                     <i class="fa-solid fa-bag-shopping text-yellow-500"></i>
                     <span class="text-xs font-bold text-slate-500">Online Store - Browser</span>
                 </div>
-                <div class="flex gap-2">
-                    <button class="w-3 h-3 rounded-full bg-green-400 hover:bg-green-500" onclick="maximizeWindow('win-goods')"></button>
-                    <button class="w-3 h-3 rounded-full bg-yellow-400 hover:bg-yellow-500" onclick="minimizeWindow('win-goods')"></button>
-                    <button class="w-3 h-3 rounded-full bg-red-400 hover:bg-red-500" onclick="closeWindow('win-goods')"></button>
-                </div>
+                <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 flex items-center justify-center transition-all" onclick="closeWindow('win-goods')">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
             </div>
             <div class="bg-slate-50 border-b border-slate-200 p-2 flex items-center gap-2">
                 <div class="flex gap-2 text-slate-400 text-sm">
@@ -595,25 +583,76 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        let isAudioOn = false;
-        const audio = document.getElementById('site-bgm');
+        // Web Audio API Global Variables
+        let audioContext = null;
+        let audioBuffer = null;
+        let audioSource = null;
+        let gainNode = null;
 
-        function toggleAudio() {
-            isAudioOn = !isAudioOn;
+        const BGM_URL = "./bgm.mp3";
+        let isAudioOn = false;
+
+        async function toggleAudio() {
             const icon = document.getElementById('audio-icon');
-            
+            isAudioOn = !isAudioOn;
+
             if (isAudioOn) {
+                // Icon change to active volume
                 icon.className = 'fa-solid fa-volume-high text-slate-600 text-lg';
-                audio.volume = 0.5;
-                audio.play().catch(e => {
-                    console.log("Audio play failed:", e);
+
+                try {
+                    if (!audioContext) {
+                        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    
+                    // Resume context if suspended (browser policy)
+                    if (audioContext.state === 'suspended') {
+                        await audioContext.resume();
+                    }
+
+                    // Load buffer if not loaded
+                    if (!audioBuffer) {
+                        const response = await fetch(BGM_URL);
+                        const arrayBuffer = await response.arrayBuffer();
+                        audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                    }
+
+                    playBuffer();
+
+                } catch (e) {
+                    console.error("Audio error:", e);
                     isAudioOn = false;
                     icon.className = 'fa-solid fa-volume-xmark text-slate-400 text-lg';
-                    alert("音楽を再生するには、ページ上のどこかをクリックしてからもう一度お試しください。");
-                });
+                    alert("音楽の読み込みまたは再生に失敗しました。");
+                }
             } else {
                 icon.className = 'fa-solid fa-volume-xmark text-slate-400 text-lg';
-                audio.pause();
+                stopBuffer();
+            }
+        }
+
+        function playBuffer() {
+            if (audioSource) stopBuffer(); // Prevent double play
+            
+            audioSource = audioContext.createBufferSource();
+            audioSource.buffer = audioBuffer;
+            audioSource.loop = true; // Seamless loop setting in Web Audio API
+            
+            gainNode = audioContext.createGain();
+            gainNode.gain.value = 0.5;
+            
+            audioSource.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            audioSource.start(0);
+        }
+
+        function stopBuffer() {
+            if (audioSource) {
+                try {
+                    audioSource.stop();
+                } catch(e) {} // ignore if already stopped
+                audioSource = null;
             }
         }
 
