@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WONDERLAND OS - EC Edition</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&family=Zen+Kaku+Gothic+New:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- jQuery & UI -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <!-- Touch Punch -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'os-bg': '#E0F2FE',
+                        'os-taskbar': 'rgba(255, 255, 255, 0.85)',
+                        'brand-blue': '#60A5FA',
+                        'brand-pink': '#F472B6',
+                        'window-bg': '#FFFFFF',
+                    },
+                    fontFamily: {
+                        'pop': ['"Mochiy Pop One"', 'sans-serif'],
+                        'body': ['"Zen Kaku Gothic New"', 'sans-serif'],
+                        'pixel': ['"VT323"', 'monospace'],
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'popup': 'popup 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards',
+                        'slide-in': 'slide-in 0.3s ease-out forwards',
+                        'slide-out': 'slide-out 0.3s ease-in forwards',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        },
+                        popup: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        'slide-in': {
+                            '0%': { transform: 'translateX(100%)', opacity: '0' },
+                            '100%': { transform: 'translateX(0)', opacity: '1' },
+                        },
+                        'slide-out': {
+                            '0%': { transform: 'translateX(0)', opacity: '1' },
+                            '100%': { transform: 'translateX(100%)', opacity: '0' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            background-color: #000;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #main-screen {
+            background-color: #E0F2FE;
+            background-image: 
+                radial-gradient(#60A5FA 1px, transparent 1px),
+                radial-gradient(#60A5FA 1px, transparent 1px);
+            background-position: 0 0, 20px 20px;
+            background-size: 40px 40px;
+        }
+
+        .shape-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(50px);
+            opacity: 0.6;
+            z-index: 0;
+            pointer-events: none;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .wallpaper-logo {
+            text-shadow: 2px 2px 0px white, 4px 4px 0px rgba(96, 165, 250, 0.2);
+        }
+
+        .desktop-icon:hover .icon-img {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(96, 165, 250, 0.6));
+        }
+        .desktop-icon:active .icon-img {
+            transform: scale(0.95);
+        }
+
+        /* ウィンドウ関連 */
+        .os-window {
+            position: absolute;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            min-width: 300px;
+            min-height: 200px;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.2s, transform 0.2s, top 0.3s, left 0.3s, width 0.3s, height 0.3s;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .os-window.is-open {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+        
+        .os-window.is-minimized {
+            opacity: 0;
+            transform: scale(0.5) translateY(200px);
+            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+        }
+
+        .os-window.is-maximized {
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: calc(100% - 56px) !important;
+            border-radius: 0;
+            transform: none !important;
+        }
+
+        .title-bar {
+            cursor: grab;
+            background: linear-gradient(to right, #eff6ff, #ffffff);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .title-bar:active {
+            cursor: grabbing;
+        }
+
+        .window-content {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .window-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        .window-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .window-content::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+            border: 2px solid #fff;
+        }
+        .window-content::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* スタートメニュー */
+        #start-menu {
+            transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.2s, visibility 0.2s;
+            transform-origin: bottom left;
+        }
+        #start-menu.hidden-menu {
+            transform: scale(0.8) translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        /* カートバッジ */
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #F472B6;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .cart-badge.pop {
+            animation: popup 0.3s ease;
+        }
+
+        /* CRTモニター風エフェクト */
+        .scanlines {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.02) 50%, rgba(0,0,0,0.02));
+            background-size: 100% 4px;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .crt-power-off {
+            animation: turn-off 0.55s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        @keyframes turn-off {
+            0% {
+                transform: scale(1, 1);
+                filter: brightness(1) sepia(0) saturate(1);
+                opacity: 1;
+            }
+            40% {
+                transform: scale(1, 0.002);
+                filter: brightness(3) sepia(1) saturate(5);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0, 0.002);
+                filter: brightness(0);
+                opacity: 0;
+            }
+        }
+
+        .crt-power-on {
+            animation: turn-on 0.55s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+        }
+
+        @keyframes turn-on {
+            0% {
+                transform: scale(0, 0.002);
+                filter: brightness(0);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1, 0.002);
+                filter: brightness(3) sepia(1) saturate(5);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1, 1);
+                filter: brightness(1) sepia(0) saturate(1);
+                opacity: 1;
+            }
+        }
+
+        .taskbar-app {
+            transition: all 0.2s;
+            position: relative;
+        }
+        .taskbar-app.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background-color: #60A5FA;
+            border-radius: 50%;
+        }
+        .taskbar-app:hover {
+            transform: translateY(-2px);
+            background-color: rgba(255,255,255,0.8);
+        }
+        
+        /* 商品カード */
+        .product-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 通知トースト */
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-left: 4px solid #60A5FA;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #334155;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        .toast-notification.show {
+            transform: translateX(0);
+        }
+    </style>
+</head>
+<body class="h-[100dvh] w-full relative overflow-hidden text-slate-700 bg-black">
+
+    <div id="main-screen" class="h-full w-full relative bg-os-bg overflow-hidden origin-center">
+
+        <!-- 壁紙レイヤー -->
+        <div id="wallpaper-container" class="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
+            <div class="shape-blob bg-blue-300 w-96 h-96 top-[-10%] left-[-10%] animate-float"></div>
+            <div class="shape-blob bg-pink-300 w-80 h-80 bottom-[-10%] right-[-10%] animate-float" style="animation-delay: -2s; animation-duration: 8s;"></div>
+            <div class="shape-blob bg-yellow-200 w-64 h-64 top-[40%] right-[10%] animate-float" style="animation-delay: -4s; animation-duration: 12s;"></div>
+            
+            <div class="absolute top-[65%] md:top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center w-full z-10 transition-all duration-500">
+                <h1 class="font-pop text-5xl md:text-9xl text-brand-blue wallpaper-logo tracking-tighter mb-4 opacity-90 transition-all">
+                    WONDERLAND
+                </h1>
+                <div class="inline-block bg-white/60 backdrop-blur-md px-6 py-2 md:px-8 md:py-3 rounded-full shadow-sm border border-white/50 animate-float" style="animation-delay: 1s;">
+                    <p class="text-slate-600 font-bold tracking-[0.3em] text-sm md:text-lg">OFFICIAL STORE</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- デスクトップアイコン (EC仕様に変更) -->
+        <div id="desktop-icons" class="absolute top-0 left-0 w-full h-full p-6 grid grid-cols-3 md:grid-flow-col md:grid-rows-6 gap-4 md:gap-6 justify-center md:justify-start content-start md:content-start z-10 pt-12 md:pt-6">
+            
+            <!-- STORE (メイン) -->
+            <div class="desktop-icon flex flex-col items-center w-full md:w-24 gap-1 cursor-pointer group" onclick="openWindow('store')">
+                <div class="icon-img w-12 h-12 md:w-14 md:h-14 bg-yellow-100 rounded-xl shadow-lg flex items-center justify-center text-2xl md:text-3xl text-yellow-500 transition-transform duration-300">
+                    <i class="fa-solid fa-shop"></i>
+                </div>
+                <span class="text-[10px] md:text-xs font-bold text-slate-600 bg-white/60 px-2 py-0.5 rounded backdrop-blur-sm group-hover:text-brand-blue truncate max-w-full text-center">Store</span>
+            </div>
+
+            <!-- LOOKBOOK (NEWS) -->
+            <div class="desktop-icon flex flex-col items-center w-full md:w-24 gap-1 cursor-pointer group" onclick="openWindow('lookbook')">
+                <div class="icon-img w-12 h-12 md:w-14 md:h-14 bg-pink-100 rounded-xl shadow-lg flex items-center justify-center text-2xl md:text-3xl text-pink-500 transition-transform duration-300">
+                    <i class="fa-solid fa-images"></i>
+                </div>
+                <span class="text-[10px] md:text-xs font-bold text-slate-600 bg-white/60 px-2 py-0.5 rounded backdrop-blur-sm group-hover:text-brand-blue truncate max-w-full text-center">Lookbook</span>
+            </div>
+
+            <!-- CONCEPT (ABOUT) -->
+            <div class="desktop-icon flex flex-col items-center w-full md:w-24 gap-1 cursor-pointer group" onclick="openWindow('concept')">
+                <div class="icon-img w-12 h-12 md:w-14 md:h-14 bg-white rounded-xl shadow-lg flex items-center justify-center text-2xl md:text-3xl text-brand-blue transition-transform duration-300">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <span class="text-[10px] md:text-xs font-bold text-slate-600 bg-white/60 px-2 py-0.5 rounded backdrop-blur-sm group-hover:text-brand-blue truncate max-w-full text-center">Brand Story</span>
+            </div>
+
+            <!-- CART (右下に配置) -->
+            <div class="desktop-icon flex flex-col items-center w-full md:w-24 gap-1 cursor-pointer group md:mt-auto relative" onclick="openWindow('cart')">
+                <div class="icon-img w-12 h-12 md:w-14 md:h-14 bg-slate-800 rounded-xl shadow-lg flex items-center justify-center text-2xl md:text-3xl text-white transition-transform duration-300">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </div>
+                <span class="text-[10px] md:text-xs font-bold text-slate-600 bg-white/60 px-2 py-0.5 rounded backdrop-blur-sm group-hover:text-brand-blue truncate max-w-full text-center">Cart</span>
+                <!-- Desktop Badge -->
+                <div id="desktop-cart-badge" class="cart-badge hidden">0</div>
+            </div>
+        </div>
+
+        <!-- ウィンドウ群 -->
+        <div id="windows-container" class="absolute inset-0 pointer-events-none pb-14 z-20">
+            
+            <!-- STORE WINDOW (Collection) -->
+            <div id="win-store" class="os-window w-[90%] md:w-[900px] h-[80%] md:h-[650px] top-[8%] left-[5%]" data-icon="fa-solid fa-shop" data-color="text-yellow-500" data-title="Store">
+                <div class="title-bar h-10 flex items-center justify-between px-3 select-none">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-shop text-yellow-500"></i>
+                        <span class="text-xs font-bold text-slate-500">Online Store</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 flex items-center justify-center transition-all" onclick="minimizeWindow('win-store')"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 flex items-center justify-center transition-all" onclick="closeWindow('win-store')"><i class="fa-solid fa-xmark text-sm"></i></button>
+                    </div>
+                </div>
+                <div class="bg-slate-50 border-b border-slate-200 p-2 flex items-center gap-2">
+                    <div class="flex gap-2 text-slate-400 text-sm">
+                        <i class="fa-solid fa-arrow-left hover:text-slate-600 cursor-pointer"></i>
+                        <i class="fa-solid fa-arrow-right hover:text-slate-600 cursor-pointer"></i>
+                        <i class="fa-solid fa-rotate-right hover:text-slate-600 cursor-pointer"></i>
+                    </div>
+                    <div class="flex-grow bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-500 font-mono flex items-center justify-between">
+                        <span>https://store.wonderland.com/collections/all</span>
+                        <i class="fa-solid fa-lock text-green-500 text-[10px]"></i>
+                    </div>
+                </div>
+                <div class="window-content flex-grow bg-white flex overflow-hidden">
+                    <!-- サイドバー (カテゴリ) -->
+                    <div class="w-48 bg-slate-50 border-r border-slate-200 p-4 hidden md:block overflow-y-auto">
+                        <h4 class="font-bold text-slate-700 mb-4 text-sm">COLLECTIONS</h4>
+                        <ul class="space-y-2 text-sm text-slate-600">
+                            <li class="cursor-pointer font-bold text-brand-blue">All Items</li>
+                            <li class="cursor-pointer hover:text-brand-blue">New Arrivals</li>
+                            <li class="cursor-pointer hover:text-brand-blue">Tops</li>
+                            <li class="cursor-pointer hover:text-brand-blue">Bottoms</li>
+                            <li class="cursor-pointer hover:text-brand-blue">Accessories</li>
+                            <li class="cursor-pointer hover:text-brand-blue">Sale</li>
+                        </ul>
+                    </div>
+                    <!-- メインコンテンツ (商品一覧) -->
+                    <div class="flex-grow p-4 md:p-6 overflow-y-auto">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="font-pop text-2xl text-slate-700">All Items</h2>
+                            <select class="bg-white border border-slate-300 text-xs rounded px-2 py-1 outline-none">
+                                <option>Featured</option>
+                                <option>Price: Low to High</option>
+                            </select>
+                        </div>
+                        <div id="product-grid" class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                            <!-- JSで生成されます -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRODUCT DETAIL (Modal Window) -->
+            <div id="win-product-detail" class="os-window w-[90%] md:w-[800px] h-[80%] md:h-[600px] top-[5%] left-[5%] md:top-[15%] md:left-[15%] z-50" data-icon="fa-solid fa-tag" data-color="text-brand-blue" data-title="Product Detail">
+                <div class="title-bar h-10 flex items-center justify-between px-3 select-none">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-tag text-brand-blue"></i>
+                        <span class="text-xs font-bold text-slate-500" id="detail-title-bar">Product Detail</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 flex items-center justify-center transition-all" onclick="closeWindow('win-product-detail')"><i class="fa-solid fa-xmark text-sm"></i></button>
+                    </div>
+                </div>
+                <div class="window-content flex-grow bg-white p-0 overflow-y-auto">
+                    <div class="flex flex-col md:flex-row h-full">
+                        <div class="w-full md:w-1/2 bg-slate-50 p-4 flex items-center justify-center">
+                            <img id="detail-img" src="" class="max-w-full max-h-[400px] object-contain shadow-lg rounded" width="400" height="400" loading="lazy">
+                        </div>
+                        <div class="w-full md:w-1/2 p-8 flex flex-col">
+                            <h2 id="detail-name" class="font-pop text-2xl text-slate-800 mb-2">Product Name</h2>
+                            <p id="detail-price" class="text-xl font-bold text-slate-600 mb-6">¥0</p>
+                            
+                            <p class="text-sm text-slate-500 leading-relaxed mb-6">
+                                架空のOS「WONDERLAND」のロゴをあしらったオリジナルアイテム。<br>
+                                心地よい肌触りと、どこか懐かしいデザインが特徴です。
+                            </p>
+
+                            <div class="mb-6">
+                                <label class="block text-xs font-bold text-slate-500 mb-2">SIZE</label>
+                                <div class="flex gap-2">
+                                    <button class="w-10 h-10 border border-slate-300 rounded flex items-center justify-center text-sm hover:border-brand-blue hover:text-brand-blue">S</button>
+                                    <button class="w-10 h-10 border border-brand-blue bg-blue-50 text-brand-blue rounded flex items-center justify-center text-sm font-bold">M</button>
+                                    <button class="w-10 h-10 border border-slate-300 rounded flex items-center justify-center text-sm hover:border-brand-blue hover:text-brand-blue">L</button>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto">
+                                <button onclick="addToCartFromDetail()" class="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-plus"></i> ADD TO CART
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CART WINDOW -->
+            <div id="win-cart" class="os-window w-[90%] md:w-[500px] h-[60%] md:h-[500px] top-[15%] left-[5%] md:top-[20%] md:left-[30%]" data-icon="fa-solid fa-cart-shopping" data-color="text-slate-700" data-title="Shopping Cart">
+                <div class="title-bar h-10 flex items-center justify-between px-3 select-none">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-cart-shopping text-slate-700"></i>
+                        <span class="text-xs font-bold text-slate-500">Your Cart</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 flex items-center justify-center transition-all" onclick="minimizeWindow('win-cart')"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 flex items-center justify-center transition-all" onclick="closeWindow('win-cart')"><i class="fa-solid fa-xmark text-sm"></i></button>
+                    </div>
+                </div>
+                <!-- 修正箇所：!overflow-hiddenを追加して、中のスクロール要素を正しく機能させる -->
+                <div class="window-content flex-grow bg-white flex flex-col p-6 !overflow-hidden">
+                    <div id="cart-items" class="flex-grow overflow-y-auto space-y-4 mb-4 pr-2">
+                        <!-- カートの中身 (JSで描画) -->
+                        <div class="text-center text-slate-400 mt-10" id="empty-cart-msg">
+                            <i class="fa-solid fa-basket-shopping text-4xl mb-2"></i>
+                            <p>Your cart is empty.</p>
+                        </div>
+                    </div>
+                    <div class="border-t pt-4 flex-shrink-0">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="font-bold text-slate-600">SUBTOTAL</span>
+                            <span class="font-bold text-xl text-slate-800" id="cart-total">¥0</span>
+                        </div>
+                        <button class="w-full bg-brand-blue text-white py-3 rounded-lg font-bold hover:bg-blue-400 transition-colors shadow-md">
+                            CHECKOUT <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                        <p class="text-xs text-center text-slate-400 mt-2">Shipping & taxes calculated at checkout</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CONCEPT (ABOUT) -->
+            <div id="win-concept" class="os-window w-[90%] md:w-[700px] h-[70%] md:h-[500px] top-[10%] left-[5%] md:left-[10%]" data-icon="fa-solid fa-book-open" data-color="text-brand-blue" data-title="Brand Story">
+                 <div class="title-bar h-10 flex items-center justify-between px-3 select-none">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-brand-blue"></i>
+                        <span class="text-xs font-bold text-slate-500">Brand Story</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 flex items-center justify-center transition-all" onclick="minimizeWindow('win-concept')"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 flex items-center justify-center transition-all" onclick="closeWindow('win-concept')"><i class="fa-solid fa-xmark text-sm"></i></button>
+                    </div>
+                </div>
+                <div class="window-content flex-grow bg-white p-8 overflow-y-auto">
+                    <div class="max-w-xl mx-auto text-center">
+                        <img src="https://placehold.co/600x300/E0F2FE/60A5FA?text=WONDERLAND" class="rounded-xl mb-6 shadow-sm" width="600" height="300" loading="lazy">
+                        <h2 class="font-pop text-2xl text-brand-blue mb-4">Concept</h2>
+                        <p class="text-slate-600 leading-loose text-sm mb-8 text-left">
+                            「WONDERLAND」は、デジタルの海に浮かぶ小さな島国。<br>
+                            ここは、誰もが子供の頃に描いた「夢」や「憧れ」を再発見できる場所です。<br><br>
+                            私たちは、レトロで懐かしいデザインと、現代的な快適さを融合させたアパレルラインを展開しています。<br>
+                            モニター越しに見る世界ではなく、袖を通した瞬間に広がる物語をお楽しみください。
+                        </p>
+                        <div class="border-t border-slate-100 pt-6 flex justify-center gap-6 text-2xl text-slate-400">
+                            <i class="fa-brands fa-instagram hover:text-pink-500 cursor-pointer transition-colors"></i>
+                            <i class="fa-brands fa-twitter hover:text-blue-400 cursor-pointer transition-colors"></i>
+                            <i class="fa-brands fa-tiktok hover:text-black cursor-pointer transition-colors"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOOKBOOK (NEWS) -->
+             <div id="win-lookbook" class="os-window w-[90%] md:w-[500px] h-[70%] md:h-[600px] top-[12%] left-[5%] md:left-[40%]" data-icon="fa-solid fa-images" data-color="text-pink-500" data-title="Lookbook">
+                 <div class="title-bar h-10 flex items-center justify-between px-3 select-none">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-images text-pink-500"></i>
+                        <span class="text-xs font-bold text-slate-500">Lookbook 2026 S/S</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 flex items-center justify-center transition-all" onclick="minimizeWindow('win-lookbook')"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <button class="w-6 h-6 rounded-full bg-slate-200 hover:bg-red-500 hover:text-white text-slate-500 flex items-center justify-center transition-all" onclick="closeWindow('win-lookbook')"><i class="fa-solid fa-xmark text-sm"></i></button>
+                    </div>
+                </div>
+                <div class="window-content flex-grow bg-white overflow-y-auto">
+                    <div class="grid grid-cols-2 gap-1">
+                         <img src="https://placehold.co/400x500/f3f4f6/9ca3af?text=LOOK+01" class="w-full h-auto object-cover hover:opacity-80 transition-opacity cursor-pointer" width="400" height="500" loading="lazy">
+                         <img src="https://placehold.co/400x500/f3f4f6/9ca3af?text=LOOK+02" class="w-full h-auto object-cover hover:opacity-80 transition-opacity cursor-pointer" width="400" height="500" loading="lazy">
+                         <img src="https://placehold.co/400x500/f3f4f6/9ca3af?text=LOOK+03" class="w-full h-auto object-cover hover:opacity-80 transition-opacity cursor-pointer" width="400" height="500" loading="lazy">
+                         <img src="https://placehold.co/400x500/f3f4f6/9ca3af?text=LOOK+04" class="w-full h-auto object-cover hover:opacity-80 transition-opacity cursor-pointer" width="400" height="500" loading="lazy">
+                         <img src="https://placehold.co/400x500/f3f4f6/9ca3af?text=LOOK+05" class="w-full h-auto object-cover hover:opacity-80 transition-opacity cursor-pointer" width="400" height="500" loading="lazy">
+                         <img src="https://placehold.co/400x500/f3f4f6/9ca3af?text=LOOK+06" class="w-full h-auto object-cover hover:opacity-80 transition-opacity cursor-pointer" width="400" height="500" loading="lazy">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- スタートメニュー -->
+        <div id="start-menu" class="hidden-menu absolute bottom-16 left-4 w-72 bg-white/90 backdrop-blur-md rounded-xl shadow-2xl border border-white z-50 overflow-hidden flex flex-col">
+            <!-- Header: Login / Profile -->
+            <div class="bg-brand-blue p-4 flex items-center gap-3 cursor-pointer hover:bg-blue-400 transition-colors group">
+                <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-brand-blue text-xl group-hover:scale-105 transition-transform">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div class="text-white">
+                    <div class="font-bold text-sm">Guest User</div>
+                    <div class="text-xs opacity-80 flex items-center gap-1">
+                        <span class="underline">Login / Sign up</span> <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Body: Navigation Links -->
+            <div class="p-2 py-4 flex flex-col gap-1">
+                <p class="px-4 text-[10px] font-bold text-slate-400 mb-1">SHOPPING</p>
+                <button class="w-full text-left px-4 py-2 hover:bg-blue-50 rounded flex items-center gap-3 text-slate-600 transition-colors" onclick="openWindow('store')">
+                    <div class="w-6 text-center"><i class="fa-solid fa-shop text-yellow-500"></i></div>
+                    <span>Online Store</span>
+                </button>
+                <button class="w-full text-left px-4 py-2 hover:bg-blue-50 rounded flex items-center gap-3 text-slate-600 transition-colors" onclick="openWindow('lookbook')">
+                    <div class="w-6 text-center"><i class="fa-solid fa-images text-pink-500"></i></div>
+                    <span>Lookbook</span>
+                </button>
+                <button class="w-full text-left px-4 py-2 hover:bg-blue-50 rounded flex items-center gap-3 text-slate-600 transition-colors" onclick="openWindow('cart')">
+                    <div class="w-6 text-center"><i class="fa-solid fa-cart-shopping text-slate-700"></i></div>
+                    <span>Your Cart</span>
+                </button>
+
+                <div class="my-2 border-t border-slate-100"></div>
+                
+                <p class="px-4 text-[10px] font-bold text-slate-400 mb-1">ABOUT</p>
+                <button class="w-full text-left px-4 py-2 hover:bg-blue-50 rounded flex items-center gap-3 text-slate-600 transition-colors" onclick="openWindow('concept')">
+                    <div class="w-6 text-center"><i class="fa-solid fa-book-open text-brand-blue"></i></div>
+                    <span>Brand Story</span>
+                </button>
+            </div>
+
+            <!-- Footer: Logout / Exit -->
+            <div class="bg-slate-50 p-2 border-t border-slate-200">
+                <button class="w-full text-left px-4 py-3 hover:bg-red-50 rounded flex items-center gap-3 text-slate-600 transition-colors hover:text-red-500 font-bold" onclick="triggerShutdown()">
+                    <div class="w-6 text-center"><i class="fa-solid fa-door-open"></i></div>
+                    <span>Log out & Exit</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- タスクバー -->
+        <div id="taskbar" class="absolute bottom-0 w-full h-14 bg-os-taskbar backdrop-blur-md shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 flex justify-between items-center px-4">
+            
+            <div class="flex items-center gap-4">
+                <button id="start-btn" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/50 transition-colors group relative" onclick="toggleStartMenu()">
+                    <i class="fa-solid fa-rainbow text-2xl text-brand-blue group-hover:scale-110 transition-transform"></i>
+                    <span class="absolute -top-10 left-0 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Start</span>
+                </button>
+                <div class="hidden md:flex items-center bg-white/50 rounded-full px-4 py-1.5 w-48 border border-white/50">
+                    <i class="fa-solid fa-search text-slate-400 text-sm mr-2"></i>
+                    <input type="text" placeholder="Search item..." class="bg-transparent border-none outline-none text-sm text-slate-600 w-full font-body">
+                </div>
+            </div>
+
+            <!-- アプリアイコンエリア -->
+            <div id="taskbar-apps" class="flex items-center gap-2 px-4 h-full">
+                <!-- JSでアイコンが追加されます -->
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- カートアイコン (タスクバー用) -->
+                <button class="relative w-10 h-full hover:bg-white/50 px-2 rounded transition-colors group" onclick="openWindow('cart')">
+                    <i class="fa-solid fa-cart-shopping text-slate-500 text-lg group-hover:text-brand-blue"></i>
+                    <div id="taskbar-cart-badge" class="cart-badge hidden" style="top: 5px; right: 2px;">0</div>
+                </button>
+
+                <div class="flex flex-col items-end justify-center px-2 hover:bg-white/50 rounded cursor-default h-full">
+                    <div id="clock-time" class="text-sm font-bold text-slate-700 leading-tight">12:00</div>
+                    <div id="clock-date" class="text-xs text-slate-500 leading-tight">2026/01/01</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="scanlines"></div>
+
+        <!-- Notification Toast -->
+        <div id="notification-area" class="toast-notification">
+            <i class="fa-solid fa-circle-check text-brand-blue text-xl"></i>
+            <div>
+                <p class="font-bold text-slate-700">Added to cart!</p>
+                <p class="text-xs text-slate-500">Check your shopping cart.</p>
+            </div>
+        </div>
+
+        <!-- Logout Confirmation Modal -->
+        <div id="logout-confirm-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 hidden">
+            <div class="bg-white rounded-xl shadow-2xl p-6 w-80 text-center animate-popup border-2 border-slate-100">
+                <div class="mb-4">
+                    <i class="fa-solid fa-door-open text-4xl text-brand-blue mb-2"></i>
+                    <h3 class="font-bold text-lg text-slate-700">Leaving so soon?</h3>
+                    <p class="text-sm text-slate-500 mt-2">買い物忘れはありませんか？</p>
+                </div>
+                <div class="flex gap-3 justify-center">
+                    <button onclick="cancelShutdown()" class="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors font-bold">
+                        NO
+                    </button>
+                    <button onclick="proceedShutdown()" class="flex-1 px-4 py-2 rounded-lg bg-brand-pink text-white hover:bg-pink-400 transition-colors font-bold">
+                        YES
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exit Message Overlay -->
+        <div id="logout-message-overlay" class="fixed inset-0 z-[110] flex items-center justify-center bg-black hidden">
+            <div class="text-center animate-popup">
+                <h2 class="font-pop text-3xl md:text-5xl text-white mb-4 tracking-wider">THANK YOU!</h2>
+                <p class="text-brand-blue text-lg font-bold">またの来店をお待ちしています！</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- データ定義 (商品を増やしました) ---
+        const PRODUCTS = [
+            { id: 'p1', name: 'Wonderland Logo Tee', price: 3500, img: 'https://placehold.co/400x400/FFF/60A5FA?text=Logo+Tee', tag: '' },
+            { id: 'p2', name: 'Pastel Hoodie', price: 8900, img: 'https://placehold.co/400x400/FFF/F472B6?text=Hoodie', tag: '' },
+            { id: 'p3', name: 'Embroidery Cap', price: 2800, img: 'https://placehold.co/400x400/FFF/A78BFA?text=Cap', tag: 'SALE', oldPrice: 4000 },
+            { id: 'p4', name: 'Canvas Tote Bag', price: 2500, img: 'https://placehold.co/400x400/FFF/FBBF24?text=Tote', tag: '' },
+            { id: 'p5', name: 'Retro Mug Cup', price: 1500, img: 'https://placehold.co/400x400/FFF/34D399?text=Mug', tag: 'NEW' },
+            { id: 'p6', name: 'Pixel Art Sticker', price: 800, img: 'https://placehold.co/400x400/FFF/F87171?text=Sticker', tag: '' },
+            { id: 'p7', name: 'Gaming Mouse Pad', price: 4200, img: 'https://placehold.co/400x400/FFF/818CF8?text=Mousepad', tag: '' },
+            { id: 'p8', name: 'Hologram Keyholder', price: 1200, img: 'https://placehold.co/400x400/FFF/F472B6?text=Key', tag: 'NEW' }
+        ];
+
+        // --- 基本システム (ドラッグ、ウィンドウ管理) ---
+        $(function() {
+            $(".os-window").draggable({
+                handle: ".title-bar",
+                containment: "body",
+                stack: ".os-window",
+                start: function() {
+                    bringToFront(this);
+                }
+            });
+        });
+
+        let openWindowsList = [];
+
+        function openWindow(id) {
+            const winId = id.startsWith('win-') ? id : 'win-' + id;
+            const win = document.getElementById(winId);
+            
+            if (win) {
+                win.classList.remove('is-minimized');
+                win.classList.add('is-open');
+                bringToFront(win);
+                
+                // スタートメニューを閉じる
+                document.getElementById('start-menu').classList.add('hidden-menu');
+                
+                if (!openWindowsList.includes(winId)) {
+                    openWindowsList.push(winId);
+                    renderTaskbar();
+                }
+                updateTaskbarActive(winId);
+            }
+        }
+
+        function closeWindow(id) {
+            const winId = id.startsWith('win-') ? id : 'win-' + id;
+            const win = document.getElementById(winId);
+            if(win) {
+                win.classList.remove('is-open');
+                setTimeout(() => { win.classList.remove('is-maximized'); }, 200);
+                openWindowsList = openWindowsList.filter(w => w !== winId);
+                renderTaskbar();
+            }
+        }
+
+        function minimizeWindow(id) {
+            const winId = id.startsWith('win-') ? id : 'win-' + id;
+            const win = document.getElementById(winId);
+            if(win) {
+                if (win.classList.contains('is-minimized')) {
+                    win.classList.remove('is-minimized');
+                    bringToFront(win);
+                    updateTaskbarActive(winId);
+                } else {
+                    win.classList.add('is-minimized');
+                    updateTaskbarActive(null);
+                }
+            }
+        }
+
+        // タスクバークリック時の挙動 (修正)
+        function handleTaskbarClick(id) {
+            const winId = id.startsWith('win-') ? id : 'win-' + id;
+            const win = document.getElementById(winId);
+            if (!win) return;
+
+            if (win.classList.contains('is-minimized')) {
+                // 最小化されている -> 復元して最前面へ
+                minimizeWindow(id); 
+            } else {
+                // 開いている場合、最前面かどうか判定
+                if (isTopWindow(winId)) {
+                    // 最前面 -> 最小化
+                    minimizeWindow(id);
+                } else {
+                    // 後ろにある -> 最前面へ
+                    bringToFront(win);
+                }
+            }
+        }
+
+        function isTopWindow(id) {
+            const win = document.getElementById(id);
+            const myZ = parseInt(win.style.zIndex) || 0;
+            
+            let isTop = true;
+            document.querySelectorAll('.os-window').forEach(w => {
+                // 自分以外の開いているウィンドウと比較
+                if (w.id !== id && !w.classList.contains('is-minimized') && w.classList.contains('is-open')) {
+                    const otherZ = parseInt(w.style.zIndex) || 0;
+                    if (otherZ > myZ) {
+                        isTop = false;
+                    }
+                }
+            });
+            return isTop;
+        }
+
+        function renderTaskbar() {
+            const container = document.getElementById('taskbar-apps');
+            container.innerHTML = '';
+            openWindowsList.forEach(winId => {
+                const win = document.getElementById(winId);
+                const iconClass = win.getAttribute('data-icon');
+                const colorClass = win.getAttribute('data-color');
+                const btn = document.createElement('div');
+                btn.className = `taskbar-app w-10 h-10 flex items-center justify-center rounded hover:bg-white/50 cursor-pointer transition-colors ${winId}`;
+                
+                // 修正: clickイベントを新しいハンドラに変更
+                btn.onclick = () => handleTaskbarClick(winId);
+                
+                if (win.style.zIndex >= getMaxZIndex() && !win.classList.contains('is-minimized')) {
+                    btn.classList.add('active');
+                }
+                btn.innerHTML = `<i class="${iconClass} ${colorClass} text-xl"></i>`;
+                container.appendChild(btn);
+            });
+        }
+
+        function updateTaskbarActive(activeWinId) {
+            const apps = document.querySelectorAll('.taskbar-app');
+            apps.forEach(app => app.classList.remove('active'));
+            if (activeWinId) {
+                openWindowsList.forEach(winId => {
+                     const win = document.getElementById(winId);
+                     // 修正: 最小化されていない場合のみアクティブ表示を考慮するが、
+                     // 実は renderTaskbar で判定しているので、ここは再描画を呼んだほうが確実かもしれないが、
+                     // パフォーマンスのためクラス操作のみにする
+                     if (winId === activeWinId && !win.classList.contains('is-minimized')) {
+                        const btn = document.getElementsByClassName(winId)[0];
+                        if(btn) btn.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        function bringToFront(element) {
+            if (typeof element === 'string') element = document.getElementById(element);
+            const maxZ = getMaxZIndex();
+            element.style.zIndex = maxZ + 1;
+            updateTaskbarActive(element.id);
+        }
+
+        function getMaxZIndex() {
+            const windows = document.querySelectorAll('.os-window');
+            let maxZ = 20;
+            windows.forEach(w => {
+                const z = parseInt(window.getComputedStyle(w).zIndex) || 20;
+                if (z > maxZ) maxZ = z;
+            });
+            return maxZ;
+        }
+
+        document.querySelectorAll('.os-window').forEach(win => {
+            win.addEventListener('mousedown', () => bringToFront(win));
+            win.addEventListener('touchstart', () => bringToFront(win));
+        });
+
+        // スタートメニュー
+        function toggleStartMenu() {
+            const menu = document.getElementById('start-menu');
+            menu.classList.toggle('hidden-menu');
+        }
+
+        // デスクトップクリックでメニューを閉じる
+        document.getElementById('desktop-icons').addEventListener('click', (e) => {
+            if (e.target.id === 'desktop-icons') {
+                document.getElementById('start-menu').classList.add('hidden-menu');
+            }
+        });
+
+        // シャットダウン演出関連
+        function triggerShutdown() {
+            document.getElementById('start-menu').classList.add('hidden-menu');
+            document.getElementById('logout-confirm-modal').classList.remove('hidden');
+        }
+
+        function cancelShutdown() {
+            document.getElementById('logout-confirm-modal').classList.add('hidden');
+        }
+
+        function proceedShutdown() {
+            const modal = document.getElementById('logout-confirm-modal');
+            const overlay = document.getElementById('logout-message-overlay');
+            const screen = document.getElementById('main-screen');
+
+            modal.classList.add('hidden');
+            overlay.classList.remove('hidden');
+
+            // 1.5秒後に電源オフアニメーション
+            setTimeout(() => {
+                screen.classList.add('crt-power-off');
+                // さらに1.5秒後にリロード
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            }, 1500);
+        }
+
+        // --- 商品一覧描画 ---
+        function renderProductGrid() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = '';
+            
+            PRODUCTS.forEach(p => {
+                const el = document.createElement('div');
+                el.className = 'product-card cursor-pointer';
+                el.onclick = () => openProduct(p.id);
+                
+                let tagHtml = p.tag ? `<div class="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">${p.tag}</div>` : '';
+                let priceHtml = p.oldPrice 
+                    ? `<div class="flex gap-2 items-center"><p class="text-red-500 text-xs font-bold">¥${p.price.toLocaleString()}</p><p class="text-slate-400 text-[10px] line-through">¥${p.oldPrice.toLocaleString()}</p></div>`
+                    : `<p class="text-slate-500 text-xs">¥${p.price.toLocaleString()}</p>`;
+
+                el.innerHTML = `
+                    <div class="aspect-square bg-slate-100 rounded-lg overflow-hidden mb-2 relative group">
+                        <img src="${p.img}" class="w-full h-full object-cover" width="400" height="400" loading="lazy">
+                        ${tagHtml}
+                        <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
+                            <button class="bg-white text-slate-800 text-xs font-bold px-4 py-2 rounded-full shadow hover:bg-brand-blue hover:text-white transition-colors" onclick="event.stopPropagation(); addToCart('${p.id}');">
+                                QUICK ADD
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-sm text-slate-700">${p.name}</h3>
+                    ${priceHtml}
+                `;
+                grid.appendChild(el);
+            });
+        }
+
+        // --- EC機能 (カートロジック) ---
+        let cart = []; // Array of { id, quantity }
+
+        function addToCart(id) {
+            const existingItem = cart.find(item => item.id === id);
+            
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                cart.push({ id: id, quantity: 1 });
+            }
+            
+            updateCartUI();
+            
+            // アニメーション演出
+            const badge = document.getElementById('taskbar-cart-badge');
+            badge.classList.remove('pop');
+            void badge.offsetWidth; // リフロー
+            badge.classList.add('pop');
+            
+            showNotification();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCartUI();
+        }
+
+        function changeQuantity(index, delta) {
+            const item = cart[index];
+            item.quantity += delta;
+            if (item.quantity <= 0) {
+                removeFromCart(index);
+            } else {
+                updateCartUI();
+            }
+        }
+
+        function updateCartUI() {
+            // 合計数量計算
+            const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            // バッジ更新
+            const badges = document.querySelectorAll('.cart-badge');
+            badges.forEach(b => {
+                b.textContent = totalCount;
+                if(totalCount > 0) b.classList.remove('hidden');
+                else b.classList.add('hidden');
+            });
+
+            // カートウィンドウの中身更新
+            const container = document.getElementById('cart-items');
+            const emptyMsg = document.getElementById('empty-cart-msg');
+            const totalEl = document.getElementById('cart-total');
+
+            if (cart.length === 0) {
+                container.innerHTML = '';
+                container.appendChild(emptyMsg);
+                emptyMsg.style.display = 'block';
+                totalEl.textContent = '¥0';
+            } else {
+                emptyMsg.style.display = 'none';
+                container.innerHTML = '';
+                
+                let totalPrice = 0;
+
+                cart.forEach((cartItem, index) => {
+                    const product = PRODUCTS.find(p => p.id === cartItem.id);
+                    if (!product) return;
+
+                    const itemTotal = product.price * cartItem.quantity;
+                    totalPrice += itemTotal;
+
+                    const row = document.createElement('div');
+                    row.className = 'flex justify-between items-center bg-slate-50 p-2 rounded';
+                    row.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <div class="w-12 h-12 bg-white rounded border overflow-hidden">
+                                <img src="${product.img}" class="w-full h-full object-cover" width="400" height="400" loading="lazy">
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-700">${product.name}</p>
+                                <p class="text-xs text-slate-500">¥${product.price.toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="flex items-center border bg-white rounded">
+                                <button onclick="changeQuantity(${index}, -1)" class="px-2 text-slate-500 hover:bg-slate-100">-</button>
+                                <span class="text-xs w-6 text-center font-bold">${cartItem.quantity}</span>
+                                <button onclick="changeQuantity(${index}, 1)" class="px-2 text-slate-500 hover:bg-slate-100">+</button>
+                            </div>
+                            <button onclick="removeFromCart(${index})" class="text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+
+                // ここで合計金額を更新
+                totalEl.textContent = '¥' + totalPrice.toLocaleString();
+            }
+        }
+
+        // --- 通知トースト ---
+        let notificationTimeout;
+        function showNotification() {
+            const notif = document.getElementById('notification-area');
+            notif.classList.add('show');
+            
+            if(notificationTimeout) clearTimeout(notificationTimeout);
+            
+            notificationTimeout = setTimeout(() => {
+                notif.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- 商品詳細ウィンドウ ---
+        let currentDetailProduct = {};
+
+        function openProduct(id) {
+            const p = PRODUCTS.find(prod => prod.id === id);
+            if(p) {
+                currentDetailProduct = p;
+                document.getElementById('detail-name').textContent = p.name;
+                document.getElementById('detail-price').textContent = '¥' + p.price.toLocaleString();
+                document.getElementById('detail-img').src = p.img;
+                document.getElementById('detail-title-bar').textContent = p.name;
+                
+                openWindow('product-detail');
+            }
+        }
+
+        function addToCartFromDetail() {
+            if(currentDetailProduct.id) {
+                addToCart(currentDetailProduct.id);
+                closeWindow('win-product-detail');
+                // 少し遅れてカートを開く演出（なくても良いが、ユーザビリティのため）
+                // setTimeout(() => openWindow('cart'), 500); 
+            }
+        }
+
+        // --- 時計 ---
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+            const dateString = now.toLocaleDateString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            document.getElementById('clock-time').textContent = timeString;
+            document.getElementById('clock-date').textContent = dateString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 初期化 ---
+        window.addEventListener('load', () => {
+            // 起動演出: power-on アニメーションを実行
+            const screen = document.getElementById('main-screen');
+            screen.classList.add('crt-power-on');
+            
+            // スタートメニューを確実に閉じる
+            document.getElementById('start-menu').classList.add('hidden-menu');
+
+            // アニメーション後にクラスを外す (再利用のため)
+            setTimeout(() => {
+                screen.classList.remove('crt-power-on');
+            }, 1000);
+
+            updateClock();
+            renderProductGrid();
+            setTimeout(() => {
+                openWindow('store'); // 最初にストアを開く
+            }, 800); // 少し遅らせる
+        });
+
+    </script>
+</body>
+</html>
